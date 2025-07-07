@@ -10,4 +10,9 @@ public record ConversationId(String value) {
     public static ConversationId newRandom(){
         return new ConversationId(UUID.randomUUID().toString());
     }
+
+    @Override
+    public String toString() {
+        return "Conversation/%s".formatted(value);
+    }
 }
