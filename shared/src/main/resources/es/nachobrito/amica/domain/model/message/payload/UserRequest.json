@@ -1,0 +1,37 @@
+{
+  "$id": "UserRequest",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "UserRequest",
+  "type": "object",
+  "required": [
+    "messageId",
+    "conversationId",
+    "timeStamp",
+    "message"
+  ],
+  "properties": {
+    "messageId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier of this particular message"
+    },
+    "conversationId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier of the conversation"
+    },
+    "timeStamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "userName": {
+      "type": "string",
+      "description": "The person's user name (optional)"
+    },
+    "message": {
+      "type": "string",
+      "description": "The person's message."
+    }
+  }
+}
+
