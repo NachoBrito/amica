@@ -1,0 +1,29 @@
+{
+  "$id": "AgentResponse",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AgentResponse",
+  "type": "object",
+  "required": [
+    "dateTime",
+    "message"
+  ],
+  "properties": {
+    "message": {
+      "type": "string",
+      "description": "The agent's message."
+    },
+    "dateTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "isComplete": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the response this sequence belongs to is complete"
+    },
+    "sequenceNumber": {
+      "$ref": "classpath:/es/nachobrito/amica/domain/model/message/payload/SequenceNumber.json"
+    }
+  }
+}
+

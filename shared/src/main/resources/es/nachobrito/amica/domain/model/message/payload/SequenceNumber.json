@@ -1,0 +1,17 @@
+{
+  "$id": "SequenceNumber",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SequenceNumber",
+  "type": "object",
+  "required": [
+    "value"
+  ],
+  "properties": {
+    "value": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 1
+    }
+  }
+}
+

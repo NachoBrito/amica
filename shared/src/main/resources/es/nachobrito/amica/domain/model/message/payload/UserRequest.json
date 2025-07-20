@@ -4,23 +4,11 @@
   "title": "UserRequest",
   "type": "object",
   "required": [
-    "messageId",
-    "conversationId",
-    "timeStamp",
+    "dateTime",
     "message"
   ],
   "properties": {
-    "messageId": {
-      "type": "string",
-      "format": "uuid",
-      "description": "Unique identifier of this particular message"
-    },
-    "conversationId": {
-      "type": "string",
-      "format": "uuid",
-      "description": "Unique identifier of the conversation"
-    },
-    "timeStamp": {
+    "dateTime": {
       "type": "string",
       "format": "date-time"
     },
