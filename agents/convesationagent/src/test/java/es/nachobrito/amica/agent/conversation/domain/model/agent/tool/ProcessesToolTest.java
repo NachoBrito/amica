@@ -14,22 +14,23 @@
  *    limitations under the License.
  */
 
-package es.nachobrito.amica.agent.conversation.domain.model.agent;
+package es.nachobrito.amica.agent.conversation.domain.model.agent.tool;
 
-import es.nachobrito.amica.agent.conversation.domain.model.agent.tool.ProcessesTool;
-import es.nachobrito.amica.agent.conversation.domain.model.agent.tool.SystemLoadTool;
-import es.nachobrito.amica.domain.model.agent.Tool;
-import es.nachobrito.amica.domain.model.agent.ToolManager;
-import jakarta.inject.Singleton;
-import java.util.Set;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * @author nacho
  */
-@Singleton
-public class DefaultToolManager implements ToolManager {
-  @Override
-  public Set<Tool<?, ?>> getRelevantTools(String userQuery) {
-    return Set.of(new ProcessesTool(), new SystemLoadTool());
+class ProcessesToolTest {
+
+  @Test
+  void shouldReturnProcesses() {
+    var count = 10;
+    var tool = new ProcessesTool();
+    var result = tool.execute(new ProcessesTool.Parameters(count));
+    assertNotNull(result);
+    assertEquals(count, result.processes().size());
   }
 }

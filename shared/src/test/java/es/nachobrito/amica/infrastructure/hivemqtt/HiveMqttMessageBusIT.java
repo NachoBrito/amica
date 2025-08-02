@@ -37,26 +37,33 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  */
 class HiveMqttMessageBusIT {
 
-    Message<PersonPayload> receivedMessage = null;
+    Message<PersonPayload> receivedPerson = null;
+    Message<ThingPayload> receivedThing = null;
 
     @Test
     void integrationTest() {
-        assertNull(receivedMessage);
+        assertNull(receivedPerson);
 
         var topic = new MessageTopic("test-topic");
         var bus = new HiveMqttMessageBus("localhost", "test-bus", new JacksonPayloadSerializer());
-        var payload = new PersonPayload("John", "Doe");
+        var personPayload = new PersonPayload("John", "Doe");
+        var thingPayload = new ThingPayload("White table");
 
         bus.registerConsumer(topic, PersonPayload.class, message -> {
-            receivedMessage = message;
+            receivedPerson = message;
         });
 
-        var sentMessage = new Message<>(new MessageId("test-id"), new ConversationId("conversation-id"), topic, payload);
-        bus.send(sentMessage);
+        bus.registerConsumer(topic, ThingPayload.class, message -> {
+            receivedThing = message;
+        });
 
-        await().atMost(Duration.ofSeconds(10)).until(() -> receivedMessage != null);
+        var personMessage = new Message<>(new MessageId("test-id-1"), new ConversationId("conversation-id"), topic, personPayload);
+        var thingMessage = new Message<>(new MessageId("test-id-2"), new ConversationId("conversation-id"), topic, thingPayload);
+        bus.send(personMessage, thingMessage);
 
-        assertEquals(sentMessage, receivedMessage);
+        await().atMost(Duration.ofSeconds(10)).until(() -> receivedPerson != null && receivedThing != null);
+
+        assertEquals(personMessage, receivedPerson);
     }
 
     @DisplayName("When responses to a message are published out of order, the buffer sorts them correctly.")
@@ -83,7 +90,10 @@ class HiveMqttMessageBusIT {
     }
 
     record PersonPayload(String name, String surname) implements MessagePayload {
-
     }
+
+    record ThingPayload(String description) implements MessagePayload {
+    }
+
 
 }

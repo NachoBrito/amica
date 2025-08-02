@@ -14,22 +14,17 @@
  *    limitations under the License.
  */
 
-package es.nachobrito.amica.agent.conversation.domain.model.agent;
-
-import es.nachobrito.amica.agent.conversation.domain.model.agent.tool.ProcessesTool;
-import es.nachobrito.amica.agent.conversation.domain.model.agent.tool.SystemLoadTool;
-import es.nachobrito.amica.domain.model.agent.Tool;
-import es.nachobrito.amica.domain.model.agent.ToolManager;
-import jakarta.inject.Singleton;
-import java.util.Set;
+package es.nachobrito.amica.domain.model.agent;
 
 /**
  * @author nacho
  */
-@Singleton
-public class DefaultToolManager implements ToolManager {
-  @Override
-  public Set<Tool<?, ?>> getRelevantTools(String userQuery) {
-    return Set.of(new ProcessesTool(), new SystemLoadTool());
-  }
+public interface Tool<P, R> {
+    String getDescription();
+
+    Class<P> getParameterClass();
+
+    Class<R> getResultClass();
+
+    R execute(P params);
 }

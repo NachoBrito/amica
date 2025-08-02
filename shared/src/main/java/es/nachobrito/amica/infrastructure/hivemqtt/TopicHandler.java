@@ -14,22 +14,22 @@
  *    limitations under the License.
  */
 
-package es.nachobrito.amica.agent.conversation.domain.model.agent;
+package es.nachobrito.amica.infrastructure.hivemqtt;
 
-import es.nachobrito.amica.agent.conversation.domain.model.agent.tool.ProcessesTool;
-import es.nachobrito.amica.agent.conversation.domain.model.agent.tool.SystemLoadTool;
-import es.nachobrito.amica.domain.model.agent.Tool;
-import es.nachobrito.amica.domain.model.agent.ToolManager;
-import jakarta.inject.Singleton;
-import java.util.Set;
+import es.nachobrito.amica.domain.model.message.Message;
+import es.nachobrito.amica.domain.model.message.MessageConsumer;
+import es.nachobrito.amica.domain.model.message.MessagePayload;
 
 /**
  * @author nacho
  */
-@Singleton
-public class DefaultToolManager implements ToolManager {
-  @Override
-  public Set<Tool<?, ?>> getRelevantTools(String userQuery) {
-    return Set.of(new ProcessesTool(), new SystemLoadTool());
-  }
+public record TopicHandler<P extends MessagePayload>(Class<P> payloadType,
+                                                     MessageConsumer<P> consumer) {
+    @SuppressWarnings("unchecked")
+    public void consume(Message<?> message) {
+        var payload = message.payload();
+        if (payloadType.isAssignableFrom(payload.getClass())) {
+            consumer.consume((Message<P>) message);
+        }
+    }
 }

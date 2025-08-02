@@ -28,8 +28,9 @@ import es.nachobrito.amica.domain.model.message.payload.AgentResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -38,8 +39,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class HiveMqttMessageBus implements MessageBus {
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private static final String MESSAGE_ID = "MESSAGE_ID";
-    private static final String CONVERSATION_ID = "CONVERSATION_ID";
+    static final String MESSAGE_ID = "MESSAGE_ID";
+    static final String CONVERSATION_ID = "CONVERSATION_ID";
+    static final String PAYLOAD_TYPE = "PAYLOAD_TYPE";
+    final Map<MessageTopic, Set<TopicHandler<?>>> topicHandlers = new HashMap<>();
 
     private Mqtt5AsyncClient subscriptionClient;
     private final String host;
@@ -47,8 +50,6 @@ public class HiveMqttMessageBus implements MessageBus {
     private final PayloadSerializer payloadSerializer;
 
     private static final String CLIENT_IDENTIFIER_PATTERN = "A.M.I.C.A / %s";
-
-    private final Map<ConversationId, Mqtt5Client> conversationClients = new ConcurrentHashMap<>();
 
     public HiveMqttMessageBus(String host, String identifier, PayloadSerializer payloadSerializer) {
         this.host = host;
@@ -58,12 +59,49 @@ public class HiveMqttMessageBus implements MessageBus {
 
     @Override
     public void send(Message<?> message) {
-        var topic = toTopic(message.topic());
+        var topic = toMqttTopic(message.topic());
 
         Mqtt5AsyncClient client = getClient(message);
         var future = publishMessage(client, topic, message);
 
         future.thenCompose(publishResult -> client.disconnect());
+    }
+
+    @Override
+    public void send(Message<?> message, MessageConsumer<AgentResponse> responseConsumer) {
+        var mqttMessageTopic = toMqttTopic(message.topic());
+        var mqttResponsesTopic = toMqttResponsesTopic(message.id());
+        var responsesTopic = MessageFactory.fromTopic(mqttResponsesTopic);
+        var client = getClient(message);
+
+        //1. subscribe for message responses with a ConversationBuffer
+        var buffer = new ConversationBuffer(responseConsumer, () -> {
+            unRegisterConsumer(responsesTopic, AgentResponse.class);
+        });
+        registerConsumer(responsesTopic, AgentResponse.class, buffer::accept);
+        publishMessage(client, mqttMessageTopic, message).thenCompose(publishResult -> client.disconnect());
+    }
+
+    @Override
+    public void respond(MessageId originalMessageId, Message<AgentResponse> response) {
+        var topic = toMqttResponsesTopic(originalMessageId);
+        var client = getClient(response);
+        var future = publishMessage(client, topic, response);
+        future.thenAccept(publishResult -> client.disconnect());
+    }
+
+    @Override
+    public <P extends MessagePayload> void registerConsumer(MessageTopic messageTopic, Class<P> payloadType, MessageConsumer<P> consumer) {
+        getTopicHandlers(messageTopic)
+                .add(new TopicHandler<>(payloadType, consumer));
+    }
+
+    public <P extends MessagePayload> void unRegisterConsumer(MessageTopic messageTopic, Class<P> payloadType) {
+        var handlers = getTopicHandlers(messageTopic);
+        handlers.removeIf(it -> it.payloadType().equals(payloadType));
+        if (handlers.isEmpty()) {
+            getSubscriptionClient().unsubscribeWith().topicFilter(messageTopic.name()).send();
+        }
     }
 
     private Mqtt5AsyncClient getClient(Message<?> message) {
@@ -84,7 +122,8 @@ public class HiveMqttMessageBus implements MessageBus {
         var payload = payloadSerializer.serialize(message.payload());
         var userProperties = Mqtt5UserProperties.of(
                 Mqtt5UserProperty.of(MESSAGE_ID, message.id().value()),
-                Mqtt5UserProperty.of(CONVERSATION_ID, message.conversationId().value())
+                Mqtt5UserProperty.of(CONVERSATION_ID, message.conversationId().value()),
+                Mqtt5UserProperty.of(PAYLOAD_TYPE, message.payload().getClass().getName())
         );
         return client.connect()
                 .thenCompose(connAck -> client
@@ -94,81 +133,40 @@ public class HiveMqttMessageBus implements MessageBus {
                         .payload(payload.getBytes()).send());
     }
 
-    @Override
-    public void send(Message<?> message, MessageConsumer<AgentResponse> responseConsumer) {
-        var messageTopic = toTopic(message.topic());
-        var responsesTopic = toResponsesTopic(message.id());
-        var client = getClient(message);
-        //1. subscribe for message responses with a ConversationBuffer
-        var buffer = new ConversationBuffer(responseConsumer, () -> {
-            getSubscriptionClient().unsubscribeWith().topicFilter(responsesTopic).send();
-        });
-        registerConsumer(new MessageTopic(responsesTopic), AgentResponse.class, response -> {
-            logger.debug("Received response: {}", response);
-            buffer.accept(response);
-        });
-        publishMessage(client, messageTopic, message).thenCompose(publishResult -> client.disconnect());
+    private String toMqttResponsesTopic(MessageId originalMessageId) {
+        return "/es/nachobrito/amica/replies/%s".formatted(originalMessageId.value());
     }
 
-    @Override
-    public void respond(MessageId originalMessageId, Message<AgentResponse> response) {
-        var topic = toResponsesTopic(originalMessageId);
-        var client = getClient(response);
-        var future = publishMessage(client, topic, response);
-        future.thenAccept(publishResult -> client.disconnect());
-    }
-
-    private String toResponsesTopic(MessageId originalMessageId) {
-        return "/replies/%s".formatted(originalMessageId.value());
-    }
-
-
-    private String toTopic(MessageTopic topic) {
+    private String toMqttTopic(MessageTopic topic) {
         if (topic.name().charAt(0) == '/') {
             return topic.name();
         }
         return "/%s".formatted(topic.name().replace('.', '/'));
     }
 
-    private MessageTopic fromTopic(String topic) {
-        return new MessageTopic(topic);
-    }
 
-    @Override
-    public <P extends MessagePayload> void registerConsumer(MessageTopic messageTopic, Class<P> payloadType, MessageConsumer<P> consumer) {
-        var topic = toTopic(messageTopic);
+    private Set<TopicHandler<?>> getTopicHandlers(MessageTopic messageTopic) {
+        if (topicHandlers.containsKey(messageTopic)) {
+            return topicHandlers.get(messageTopic);
+        }
+        topicHandlers.computeIfAbsent(messageTopic, k -> ConcurrentHashMap.newKeySet());
+        var topic = toMqttTopic(messageTopic);
         getSubscriptionClient().subscribeWith()
                 .topicFilter(topic)
                 .qos(MqttQos.AT_LEAST_ONCE)
-                .callback(mqtt5Publish -> {
-                    consumer.consume(toMessage(mqtt5Publish, payloadType));
-                })
+                .callback(this::handleMessage)
                 .send();
+        return topicHandlers.get(messageTopic);
     }
 
-    private <P extends MessagePayload> Message<P> toMessage(Mqtt5Publish mqtt5Publish, Class<P> payloadType) {
-        String payloadString = StandardCharsets.UTF_8.decode(mqtt5Publish.getPayload().orElseThrow()).toString();
-        logger.debug("Deserializing payload to {}: {}", payloadType, payloadString);
-        var payload = payloadSerializer.deSerialize(payloadString, payloadType);
-        var topic = fromTopic(mqtt5Publish.getTopic().filter().toString());
-        var properties = mqtt5Publish.getUserProperties().asList();
-        MessageId messageId = null;
-        ConversationId conversationId = null;
-        for (Mqtt5UserProperty property : properties) {
-            switch (property.getName().toString()) {
-                case MESSAGE_ID:
-                    messageId = new MessageId(property.getValue().toString());
-                    break;
-
-                case CONVERSATION_ID:
-                    conversationId = new ConversationId(property.getValue().toString());
-                    break;
-            }
-        }
-        if (messageId == null) {
-            throw new InvalidMessageException("Message ID cannot be null!");
-        }
-        return new Message<>(messageId, conversationId, topic, payload);
+    private void handleMessage(Mqtt5Publish mqtt5Publish) {
+        var messageTopic = MessageFactory.fromTopic(mqtt5Publish.getTopic().filter().toString());
+        var message = MessageFactory.from(mqtt5Publish, payloadSerializer);
+        topicHandlers
+                .get(messageTopic)
+                .stream()
+                .filter(it -> it.payloadType().equals(message.payload().getClass()))
+                .forEach(it -> it.consume(message));
     }
 
 

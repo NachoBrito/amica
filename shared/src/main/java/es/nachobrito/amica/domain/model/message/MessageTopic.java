@@ -30,4 +30,5 @@ public record MessageTopic(String name) {
     }
 
     public static final MessageTopic USER_REQUESTS = new MessageTopic("es.nachobrito.amica.user.request.v1");
+    public static final MessageTopic SYSTEM_EVENTS = new MessageTopic("es.nachobrito.amica.system.event.v1");
 }

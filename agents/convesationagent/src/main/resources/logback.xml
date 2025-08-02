@@ -27,5 +27,8 @@
 
     <root level="info">
         <appender-ref ref="STDOUT"/>
+
     </root>
+    <!--    <logger name="com.github.tjake" level="TRACE"/>-->
+
 </configuration>

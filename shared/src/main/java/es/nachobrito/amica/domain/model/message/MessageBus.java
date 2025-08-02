@@ -18,6 +18,8 @@ package es.nachobrito.amica.domain.model.message;
 
 import es.nachobrito.amica.domain.model.message.payload.AgentResponse;
 
+import java.util.Arrays;
+
 
 /// Generic Message Bus interface that can be used to:
 ///
@@ -34,6 +36,10 @@ public interface MessageBus {
      * @param message the message
      */
     void send(Message<?> message);
+
+    default void send(Message<?>... messages) {
+        Arrays.stream(messages).forEach(this::send);
+    }
 
     /**
      * Publishes a message to the bus, expecting other messages from the LLM in response.

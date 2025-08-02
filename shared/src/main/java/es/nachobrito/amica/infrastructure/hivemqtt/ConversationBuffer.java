@@ -55,36 +55,32 @@ public class ConversationBuffer implements Consumer<Message<AgentResponse>> {
 
     @Override
     public synchronized void accept(Message<AgentResponse> message) {
+        logger.debug("Received response {}", message);
         boolean responseComplete = false;
         int seq = message.payload().sequenceNumber().value();
 
-        // Insert into buffer if not already there
         if (!buffer.containsKey(seq)) {
             buffer.put(seq, message);
         }
 
-        // Intentar emitir en orden
         while (buffer.containsKey(nextExpectedSeq)) {
             var next = buffer.remove(nextExpectedSeq);
-            delegate.consume(next); // Procesar en orden
+            delegate.consume(next);
             lastEmit = Instant.now();
             nextExpectedSeq++;
-            if (next.payload().isComplete()) {
+            if (Boolean.TRUE.equals(next.payload().isComplete())) {
                 responseComplete = true;
             }
         }
 
-        // Control: si buffer muy lleno o pasa mucho tiempo, liberar siguiente
         if (!buffer.isEmpty()) {
             if (buffer.size() > maxBufferSize || Duration.between(lastEmit, Instant.now()).compareTo(maxWait) > 0) {
-                // Emitir el menor mensaje disponible aunque no sea exactamente el siguiente
                 var first = buffer.pollFirstEntry();
                 if (first != null) {
-                    //logger.warn("Emitiendo fuera de orden: esperado " + nextExpectedSeq + " pero llegó " + first.getKey());
                     delegate.consume(first.getValue());
                     lastEmit = Instant.now();
                     nextExpectedSeq = first.getKey() + 1;
-                    if (first.getValue().payload().isComplete()) {
+                    if (Boolean.TRUE.equals(first.getValue().payload().isComplete())) {
                         responseComplete = true;
                     }
                 }
