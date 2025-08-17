@@ -16,48 +16,24 @@
 
 package es.nachobrito.amica.agent.conversation.domain.model.agent.tool;
 
-import es.nachobrito.amica.domain.model.agent.Tool;
-import io.micronaut.core.annotation.Introspected;
-import java.io.IOException;
-import java.util.regex.Pattern;
+import es.nachobrito.amica.domain.model.agent.tool.Tool;
 
 /**
- * Tool that can be used to get the current uptime and average load from the system
- *
  * @author nacho
  */
-@Introspected
-public class SystemLoadTool implements Tool<Void, SystemLoadTool.SystemLoad> {
-  private static final Pattern pattern =
-      Pattern.compile(
-          "^([\\d:]+) up (\\d+) days, ([\\d:]+),  (\\d+) users,  load average: ([\\d\\.]+), ([\\d\\.]+), ([\\d\\.]+)$");
-
-  @Introspected
-  public record SystemLoad(
-      int uptimeDays, int userCount, double loadAvg1, double loadAvg5, double loadAvg15) {
-    public static SystemLoad of(String line) {
-      var matcher = pattern.matcher(line.trim());
-      if (!matcher.matches()) {
-        throw new ToolInvocationException("Invalid format: %s".formatted(line));
-      }
-      return new SystemLoad(
-          Integer.parseInt(matcher.group(2)),
-          Integer.parseInt(matcher.group(4)),
-          Double.parseDouble(matcher.group(5)),
-          Double.parseDouble(matcher.group(6)),
-          Double.parseDouble(matcher.group(7)));
-    }
-  }
-
-  private static final String[] COMMAND = new String[] {"uptime"};
-
+public class SystemLoadTool implements Tool<Void, SystemLoad> {
   @Override
   public String getDescription() {
-    return "Returns information about the current system load, uptime and current user count";
+    return """
+  Returns the following information about this system:
+  - The number of days this system has been active
+  - The current number of users logged into the system
+  - The load average in the last 1, 5 and 15 minutes
+  """;
   }
 
   @Override
-  public Class<Void> getParameterClass() {
+  public Class<Void> getArgumentClass() {
     return Void.class;
   }
 
@@ -67,18 +43,7 @@ public class SystemLoadTool implements Tool<Void, SystemLoadTool.SystemLoad> {
   }
 
   @Override
-  public SystemLoad execute(Void params) {
-    try {
-      var process = new ProcessBuilder().command(COMMAND).start();
-      try (var reader = process.inputReader()) {
-        var load = reader.lines().findFirst().map(SystemLoad::of).orElseThrow();
-
-        process.destroyForcibly();
-        return load;
-      }
-
-    } catch (IOException e) {
-      throw new ToolInvocationException(e);
-    }
+  public SystemLoad execute(Void unused) {
+    return SystemLoad.current();
   }
 }

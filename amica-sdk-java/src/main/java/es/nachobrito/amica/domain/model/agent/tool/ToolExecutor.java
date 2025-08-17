@@ -14,20 +14,21 @@
  *    limitations under the License.
  */
 
-package es.nachobrito.amica.agent.conversation.infrastructure.langchain4j.agent;
+package es.nachobrito.amica.domain.model.agent.tool;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import es.nachobrito.amica.agent.conversation.domain.model.agent.tool.SystemLoadTool;
-import org.junit.jupiter.api.Test;
+import java.util.concurrent.CompletableFuture;
 
 /**
+ * Implementations of this interface will handle centralized tool execution, to implement cross-cutting concerns like
+ * observability, authorization, caching, etc.
+ * <p>
+ * Agents should use these services for tool execution.
+ *
  * @author nacho
  */
-class ToolSpecificationFactoryTest {
-  @Test
-  void shouldBuildToolSpecification() {
-    var spec = ToolSpecificationFactory.with(new SystemLoadTool());
-    assertNotNull(spec);
-  }
+public interface ToolExecutor {
+
+    <A, R> R execute(Tool<A, R> tool, A arguments);
+
+    <A, R> CompletableFuture<R> executeAsync(Tool<A, R> tool, A arguments);
 }

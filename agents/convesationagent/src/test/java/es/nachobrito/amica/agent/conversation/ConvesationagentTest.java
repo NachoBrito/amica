@@ -16,17 +16,17 @@
 
 package es.nachobrito.amica.agent.conversation;
 
-import io.micronaut.runtime.EmbeddedApplication;
+import io.micronaut.context.ApplicationContext;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Assertions;
-
 import jakarta.inject.Inject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 @MicronautTest
 class ConvesationagentTest {
 
-  @Inject EmbeddedApplication<?> application;
+  @Inject
+  ApplicationContext application;
 
   @Test
   void testItWorks() {

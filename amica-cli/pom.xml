@@ -83,12 +83,7 @@
         </dependency>
         <dependency>
             <groupId>es.nachobrito.amica</groupId>
-            <artifactId>shared</artifactId>
-            <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>es.nachobrito.amica</groupId>
-            <artifactId>shared</artifactId>
+            <artifactId>amica-sdk-java</artifactId>
             <version>1.0</version>
         </dependency>
         <dependency>

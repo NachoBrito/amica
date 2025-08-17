@@ -25,14 +25,15 @@ import org.junit.jupiter.api.Test;
  */
 class SystemLoadToolTest {
   @Test
-  void shouldReturnSystemLoad() {
+  void shouldReturnUptime() {
     var tool = new SystemLoadTool();
-    var result = tool.execute(null);
-    assertNotNull(result);
-    assertTrue(result.loadAvg1() > 0);
-    assertTrue(result.loadAvg5() > 0);
-    assertTrue(result.loadAvg15() > 0);
-    assertTrue(result.uptimeDays() > 0);
-    assertTrue(result.userCount() > 0);
+    var load = tool.execute(null);
+    assertNotNull(load);
+
+    assertTrue(load.loadAvg1() > 0);
+    assertTrue(load.loadAvg5() > 0);
+    assertTrue(load.loadAvg15() > 0);
+    assertTrue(load.uptimeDays() >= 0);
+    assertTrue(load.userCount() > 1);
   }
 }

@@ -19,7 +19,7 @@ CONTAINER ID   IMAGE                      COMMAND                  CREATED      
 To verify this is working, you can subscribe to a topic, in this case `test.message`:
 
 ```bash
-docker exec -it mosquitto mosquitto_sub -v -t test.message
+docker exec -it mosquitto mosquitto_sub -v -t "#"
 ```
 
 And then publish a message **from a different terminal**:

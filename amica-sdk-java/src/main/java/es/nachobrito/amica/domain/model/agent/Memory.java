@@ -14,20 +14,14 @@
  *    limitations under the License.
  */
 
-package es.nachobrito.amica.agent.conversation.infrastructure.langchain4j.agent;
+package es.nachobrito.amica.domain.model.agent;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import es.nachobrito.amica.agent.conversation.domain.model.agent.tool.SystemLoadTool;
-import org.junit.jupiter.api.Test;
+import es.nachobrito.amica.domain.model.agent.conversation.Conversation;
+import es.nachobrito.amica.domain.model.message.ConversationId;
 
 /**
  * @author nacho
  */
-class ToolSpecificationFactoryTest {
-  @Test
-  void shouldBuildToolSpecification() {
-    var spec = ToolSpecificationFactory.with(new SystemLoadTool());
-    assertNotNull(spec);
-  }
+public interface Memory {
+    Conversation getConversation(ConversationId conversationId);
 }

@@ -14,20 +14,22 @@
  *    limitations under the License.
  */
 
-package es.nachobrito.amica.agent.conversation.infrastructure.langchain4j.agent;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import es.nachobrito.amica.agent.conversation.domain.model.agent.tool.SystemLoadTool;
-import org.junit.jupiter.api.Test;
+package es.nachobrito.amica.domain.model.agent.tool;
 
 /**
  * @author nacho
  */
-class ToolSpecificationFactoryTest {
-  @Test
-  void shouldBuildToolSpecification() {
-    var spec = ToolSpecificationFactory.with(new SystemLoadTool());
-    assertNotNull(spec);
-  }
+public interface Tool<A, R> {
+    String getDescription();
+
+    Class<A> getArgumentClass();
+
+    Class<R> getResultClass();
+
+    R execute(A args);
+
+    default String getName() {
+        return getClass().getSimpleName();
+    }
+
 }

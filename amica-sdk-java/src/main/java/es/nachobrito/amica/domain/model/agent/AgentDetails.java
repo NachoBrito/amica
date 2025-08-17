@@ -14,20 +14,24 @@
  *    limitations under the License.
  */
 
-package es.nachobrito.amica.agent.conversation.infrastructure.langchain4j.agent;
+package es.nachobrito.amica.domain.model.agent;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import es.nachobrito.amica.agent.conversation.domain.model.agent.tool.SystemLoadTool;
-import org.junit.jupiter.api.Test;
+import java.util.regex.Pattern;
 
 /**
  * @author nacho
  */
-class ToolSpecificationFactoryTest {
-  @Test
-  void shouldBuildToolSpecification() {
-    var spec = ToolSpecificationFactory.with(new SystemLoadTool());
-    assertNotNull(spec);
-  }
+public record AgentDetails(String agentId, String agentName) {
+    private static final Pattern idPattern = Pattern.compile("^[a-z0-9\\-]{5,}$");
+
+    public AgentDetails {
+        validateAgentId(agentId);
+
+    }
+
+    private void validateAgentId(String agentId) {
+        if (!idPattern.matcher(agentId).matches()) {
+            throw new IllegalArgumentException("Agent id does not match %s".formatted(idPattern.pattern()));
+        }
+    }
 }

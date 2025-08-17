@@ -14,20 +14,23 @@
  *    limitations under the License.
  */
 
-package es.nachobrito.amica.agent.conversation.infrastructure.langchain4j.agent;
+package es.nachobrito.amica.domain.model.agent.conversation;
 
-import static org.junit.jupiter.api.Assertions.*;
+import es.nachobrito.amica.domain.model.message.ConversationId;
 
-import es.nachobrito.amica.agent.conversation.domain.model.agent.tool.SystemLoadTool;
-import org.junit.jupiter.api.Test;
+import java.util.List;
 
 /**
+ * A Conversation instance holds the messages of a conversation between the user and one or more agents.
+ *
  * @author nacho
  */
-class ToolSpecificationFactoryTest {
-  @Test
-  void shouldBuildToolSpecification() {
-    var spec = ToolSpecificationFactory.with(new SystemLoadTool());
-    assertNotNull(spec);
-  }
+public interface Conversation {
+
+
+    ConversationId getId();
+
+    List<ConversationMessage> getMessages();
+
+    void add(ConversationMessage conversationMessage);
 }

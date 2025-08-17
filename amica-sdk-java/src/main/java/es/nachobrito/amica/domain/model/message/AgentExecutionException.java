@@ -14,23 +14,29 @@
  *    limitations under the License.
  */
 
-package es.nachobrito.amica.agent.conversation;
+package es.nachobrito.amica.domain.model.message;
 
-import es.nachobrito.amica.domain.model.agent.conversation.ConversationMessage;
-import es.nachobrito.amica.domain.model.message.payload.AgentResponse;
-import es.nachobrito.amica.domain.model.message.payload.SequenceNumber;
 import es.nachobrito.amica.domain.model.message.payload.UserRequest;
-import io.micronaut.runtime.Micronaut;
-import io.micronaut.serde.annotation.SerdeImport;
 
-@SerdeImport(UserRequest.class)
-@SerdeImport(AgentResponse.class)
-@SerdeImport(SequenceNumber.class)
-@SerdeImport(ConversationMessage.class)
-@SerdeImport(ConversationMessage.ToolExecutionRequest.class)
-public class Application {
+/**
+ * @author nacho
+ */
+public class AgentExecutionException extends RuntimeException {
+    private final Message<UserRequest> originalMessage;
+    private final Throwable cause;
 
-  public static void main(String[] args) {
-    Micronaut.run(Application.class, args);
-  }
+    public AgentExecutionException(Message<UserRequest> originalMessage, Throwable cause) {
+        super("Error while processing user message: %s".formatted(originalMessage.payload().message()), cause);
+        this.originalMessage = originalMessage;
+        this.cause = cause;
+    }
+
+    public Message<UserRequest> getOriginalMessage() {
+        return originalMessage;
+    }
+
+    @Override
+    public Throwable getCause() {
+        return cause;
+    }
 }

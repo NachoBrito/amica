@@ -15,7 +15,7 @@ services:
   valkey:
     container_name: valkey
     hostname: valkey
-    image: valkey/valkey:8.1.2-alpine
+    image: valkey/valkey-extension:8.1-bookworm
     volumes:
       - .valkey/conf/valkey.conf:/etc/valkey/valkey.conf
       - ./valkey/data:/data

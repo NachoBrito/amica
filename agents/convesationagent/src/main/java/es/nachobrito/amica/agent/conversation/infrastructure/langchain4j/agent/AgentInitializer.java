@@ -30,15 +30,14 @@ import org.slf4j.LoggerFactory;
 public class AgentInitializer implements ApplicationEventListener<StartupEvent> {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   private final MessageBus messageBus;
-  private final LangChain4jAgent agent;
+  private final ConversationAgent agent;
 
-    public AgentInitializer(MessageBus messageBus, LangChain4jAgent agent) {
-        this.messageBus = messageBus;
-        this.agent = agent;
-    }
+  public AgentInitializer(MessageBus messageBus, ConversationAgent agent) {
+    this.messageBus = messageBus;
+    this.agent = agent;
+  }
 
-
-    @Override
+  @Override
   public void onApplicationEvent(StartupEvent event) {
     logger.info("Registering agent: {}", agent);
     agent.register(messageBus);

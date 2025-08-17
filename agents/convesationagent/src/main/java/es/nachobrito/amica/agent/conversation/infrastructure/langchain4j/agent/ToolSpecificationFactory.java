@@ -19,7 +19,7 @@ package es.nachobrito.amica.agent.conversation.infrastructure.langchain4j.agent;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.service.output.JsonSchemas;
-import es.nachobrito.amica.domain.model.agent.Tool;
+import es.nachobrito.amica.domain.model.agent.tool.Tool;
 import java.util.List;
 import java.util.Set;
 
@@ -28,21 +28,28 @@ import java.util.Set;
  */
 public class ToolSpecificationFactory {
 
+  /**
+   * Creates a new ToolSpecification describing the provided tool instance
+   *
+   * @param tool the tool to describe with this ToolSpecification
+   * @return the ToolSpecification
+   */
   public static ToolSpecification with(Tool<?, ?> tool) {
-    return ToolSpecification.builder()
-        .name(tool.getClass().getName())
-        .description(tool.getDescription())
-        .parameters(buildParameters(tool))
-        .build();
+    var builder =
+        ToolSpecification.builder().name(tool.getName()).description(tool.getDescription());
+
+    buildParameters(tool, builder);
+    return builder.build();
   }
 
-  private static JsonObjectSchema buildParameters(Tool<?, ?> tool) {
-    var builder = JsonObjectSchema.builder();
-    if (!Void.class.equals(tool.getParameterClass())) {
-      var propertySchema = JsonSchemas.jsonSchemaFrom(tool.getParameterClass());
+  private static void buildParameters(Tool<?, ?> tool, ToolSpecification.Builder toolSpecBuilder) {
+    var voidClasses = Set.of(void.class, Void.class);
+    if (!voidClasses.contains(tool.getArgumentClass())) {
+      var builder = JsonObjectSchema.builder();
+      var propertySchema = JsonSchemas.jsonSchemaFrom(tool.getArgumentClass());
       builder.addProperty("params", propertySchema.orElseThrow().rootElement());
+      toolSpecBuilder.parameters(builder.build());
     }
-    return builder.build();
   }
 
   public static List<ToolSpecification> with(Set<Tool<?, ?>> tools) {

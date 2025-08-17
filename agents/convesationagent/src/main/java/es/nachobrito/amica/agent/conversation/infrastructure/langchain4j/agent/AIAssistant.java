@@ -16,18 +16,13 @@
 
 package es.nachobrito.amica.agent.conversation.infrastructure.langchain4j.agent;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import es.nachobrito.amica.agent.conversation.domain.model.agent.tool.SystemLoadTool;
-import org.junit.jupiter.api.Test;
+import dev.langchain4j.service.*;
 
 /**
  * @author nacho
  */
-class ToolSpecificationFactoryTest {
-  @Test
-  void shouldBuildToolSpecification() {
-    var spec = ToolSpecificationFactory.with(new SystemLoadTool());
-    assertNotNull(spec);
-  }
+public interface AIAssistant {
+  @UserMessage(fromResource = "prompt.md")
+  TokenStream chat(
+      @MemoryId String memoryId, @UserName String userName, @V("user_message") String userMessage);
 }

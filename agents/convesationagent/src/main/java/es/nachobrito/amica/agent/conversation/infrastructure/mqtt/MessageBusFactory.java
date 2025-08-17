@@ -14,20 +14,24 @@
  *    limitations under the License.
  */
 
-package es.nachobrito.amica.agent.conversation.infrastructure.langchain4j.agent;
+package es.nachobrito.amica.agent.conversation.infrastructure.mqtt;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import es.nachobrito.amica.agent.conversation.domain.model.agent.tool.SystemLoadTool;
-import org.junit.jupiter.api.Test;
+import es.nachobrito.amica.domain.model.message.MessageBus;
+import es.nachobrito.amica.infrastructure.hivemqtt.HiveMqttMessageBus;
+import io.micronaut.context.annotation.Factory;
+import io.micronaut.context.annotation.Value;
+import jakarta.inject.Singleton;
 
 /**
  * @author nacho
  */
-class ToolSpecificationFactoryTest {
-  @Test
-  void shouldBuildToolSpecification() {
-    var spec = ToolSpecificationFactory.with(new SystemLoadTool());
-    assertNotNull(spec);
+@Factory
+public class MessageBusFactory {
+  @Singleton
+  MessageBus messageBus(
+      @Value("${amica.mqtt.host}") String host,
+      @Value("${amica.mqtt.client.identifier}") String identifier,
+      SerdePayloadSerializer payloadSerializer) {
+    return new HiveMqttMessageBus(host, identifier, payloadSerializer);
   }
 }

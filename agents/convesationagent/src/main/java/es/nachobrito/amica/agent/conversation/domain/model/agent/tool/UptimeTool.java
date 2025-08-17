@@ -14,20 +14,31 @@
  *    limitations under the License.
  */
 
-package es.nachobrito.amica.agent.conversation.infrastructure.langchain4j.agent;
+package es.nachobrito.amica.agent.conversation.domain.model.agent.tool;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import es.nachobrito.amica.agent.conversation.domain.model.agent.tool.SystemLoadTool;
-import org.junit.jupiter.api.Test;
+import es.nachobrito.amica.domain.model.agent.tool.Tool;
 
 /**
  * @author nacho
  */
-class ToolSpecificationFactoryTest {
-  @Test
-  void shouldBuildToolSpecification() {
-    var spec = ToolSpecificationFactory.with(new SystemLoadTool());
-    assertNotNull(spec);
+public class UptimeTool implements Tool<Void, Integer> {
+  @Override
+  public String getDescription() {
+    return "Returns the uptime of the system (number of days this system has been active)";
+  }
+
+  @Override
+  public Class<Void> getArgumentClass() {
+    return void.class;
+  }
+
+  @Override
+  public Class<Integer> getResultClass() {
+    return Integer.class;
+  }
+
+  @Override
+  public Integer execute(Void unused) {
+    return SystemLoad.current().uptimeDays();
   }
 }

@@ -14,20 +14,31 @@
  *    limitations under the License.
  */
 
-package es.nachobrito.amica.agent.conversation.infrastructure.langchain4j.agent;
+package es.nachobrito.amica.agent.conversation.domain.model.agent.tool;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import es.nachobrito.amica.agent.conversation.domain.model.agent.tool.SystemLoadTool;
-import org.junit.jupiter.api.Test;
+import es.nachobrito.amica.domain.model.agent.tool.Tool;
 
 /**
  * @author nacho
  */
-class ToolSpecificationFactoryTest {
-  @Test
-  void shouldBuildToolSpecification() {
-    var spec = ToolSpecificationFactory.with(new SystemLoadTool());
-    assertNotNull(spec);
+public class LoadAverage15Tool implements Tool<Void, Double> {
+  @Override
+  public String getDescription() {
+    return "Returns the average system load in the past 15 minutes";
+  }
+
+  @Override
+  public Class<Void> getArgumentClass() {
+    return void.class;
+  }
+
+  @Override
+  public Class<Double> getResultClass() {
+    return Double.class;
+  }
+
+  @Override
+  public Double execute(Void unused) {
+    return SystemLoad.current().loadAvg15();
   }
 }
