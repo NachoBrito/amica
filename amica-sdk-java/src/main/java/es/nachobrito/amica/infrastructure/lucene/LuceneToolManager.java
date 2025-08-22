@@ -90,7 +90,7 @@ public class LuceneToolManager implements ToolManager {
     private String prepareQuery(String userQuery) {
         final var regexLines = Pattern.compile("\\n\\s+");
         final var regexSpaces = Pattern.compile("\\s");
-        final var regexReserved = Pattern.compile("([\\+\\-\\&\\|\\!\\(\\)\\{\\}\\[\\]\\^\\\"\\~\\*\\?\\:\\\\])");
+        final var regexReserved = Pattern.compile("([\\+\\-\\&\\|\\!\\(\\)\\{\\}\\[\\]\\^\\\"\\~\\*\\?\\:\\\\/])");
         var result = regexLines.matcher(userQuery.trim()).replaceAll(" ");
         result = regexReserved.matcher(result.trim()).replaceAll("\\\\$1");
         result = regexSpaces.matcher(result).replaceAll(" OR ");

@@ -1,0 +1,6 @@
+applicationType: messaging
+defaultPackage: es.nachobrito.amica.agent.minutetaker
+testFramework: junit
+sourceLanguage: java
+buildTool: maven
+features: [ app-name, http-client-test, java, java-application, junit, kafka, logback, maven, maven-enforcer-plugin, properties, readme, serialization-jackson, shade, test-resources ]

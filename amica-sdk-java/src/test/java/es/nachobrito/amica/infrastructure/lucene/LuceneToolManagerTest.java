@@ -79,7 +79,7 @@ class LuceneToolManagerTest {
     }
 
     @Test
-    void shouldParsePrompts() {
+    void shouldParsePrompts1() {
         var prompt = """
                 # Identity
                 
@@ -95,6 +95,19 @@ class LuceneToolManagerTest {
                 
                 What was the load average of this system in the last 5 minutes?
                 
+                """;
+        var toolManager = new LuceneToolManager(Set.of());
+        assertDoesNotThrow(() -> {
+            toolManager.getRelevantTools(prompt);
+        });
+    }
+
+    @Test
+    void shouldParsePrompts2() {
+        var prompt = """
+                 Summarize the following text, and write the contents to the file ./summary.txt:
+                
+                In the study of cognitive science, we would like to think that humans employ a fairly formal system of reasoning, meaning that computations in the mind are somehow form-invariant, that words are not minced, and that we take what was said exactly as it was said – at least that’s what we used to think. Language is such a fundamental basis of cognition that it is often overlooked, where it’s become an implicit assumption that people rarely question. However, it is due to exactly the subtle and pervasive nature of language that we stumble in the formalization of human cognition, because not only is language often an uncontrollable variable in the black box of the human mind, it also has profound impacts on the way we investigate cognition. A distinction should be made here between our spoken language and “language” in general, because mathematical symbols, for example, are also used as a language, a more precise one at that, but not without its own problems. This essay will first look at some of the issues we face with the spoken language, and hopefully then generalize to the broader sense of the word.
                 """;
         var toolManager = new LuceneToolManager(Set.of());
         assertDoesNotThrow(() -> {
