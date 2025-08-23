@@ -18,6 +18,7 @@ package es.nachobrito.amica.infrastructure.hivemqtt;
 
 import es.nachobrito.amica.domain.model.message.*;
 import es.nachobrito.amica.domain.model.message.payload.AgentResponse;
+import es.nachobrito.amica.domain.model.message.payload.ConversationEnded;
 import es.nachobrito.amica.domain.model.message.payload.SequenceNumber;
 import es.nachobrito.amica.infrastructure.JacksonPayloadSerializer;
 import org.junit.jupiter.api.DisplayName;
@@ -29,8 +30,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author nacho
@@ -87,6 +87,33 @@ class HiveMqttMessageBusIT {
         await().atMost(Duration.ofSeconds(30)).until(() -> receivedMessages.size() == 2);
         assertEquals(agentResponse1, receivedMessages.get(0));
         assertEquals(agentResponse2, receivedMessages.get(1));
+    }
+
+    @DisplayName("When a conversation ends, a new ConversationEnded system event is published.")
+    @Test
+    void conversationSystemEventsTest() {
+        var receivedMessages = new ArrayList<Message<?>>();
+        var receivedEvents = new ArrayList<SystemEvent>();
+        var request = Message.userRequest(new PersonPayload("John", "Doe"));
+        var bus = new HiveMqttMessageBus("localhost", "test-bus", new JacksonPayloadSerializer());
+        bus.send(request, receivedMessages::add);
+
+        bus.registerConsumer(MessageTopic.SYSTEM_EVENTS, ConversationEnded.class, event -> receivedEvents.add(event.payload()));
+
+        var agentResponse1 = new AgentResponse("tokens", ZonedDateTime.now(ZoneOffset.UTC), false, new SequenceNumber(1));
+        var agentResponse2 = new AgentResponse("tokens", ZonedDateTime.now(ZoneOffset.UTC), true, new SequenceNumber(2));
+
+        bus.respond(request.id(), Message.responseTo(request, agentResponse2));
+        await().during(Duration.ofMillis(500));
+        bus.respond(request.id(), Message.responseTo(request, agentResponse1));
+
+        await().atMost(Duration.ofSeconds(30)).until(() -> receivedMessages.size() == 2);
+
+        assertEquals(1, receivedEvents.size());
+        var conversationId = receivedMessages.get(0).conversationId().value();
+        var event = receivedEvents.getFirst();
+        assertInstanceOf(ConversationEnded.class, event);
+        assertEquals(conversationId, ((ConversationEnded) event).conversationId());
     }
 
     record PersonPayload(String name, String surname) implements MessagePayload {

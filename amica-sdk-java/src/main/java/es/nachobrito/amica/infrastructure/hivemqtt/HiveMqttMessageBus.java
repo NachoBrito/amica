@@ -25,6 +25,7 @@ import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish;
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5PublishResult;
 import es.nachobrito.amica.domain.model.message.*;
 import es.nachobrito.amica.domain.model.message.payload.AgentResponse;
+import es.nachobrito.amica.domain.model.message.payload.ConversationEnded;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +50,7 @@ public class HiveMqttMessageBus implements MessageBus {
     private final String identifier;
     private final PayloadSerializer payloadSerializer;
 
-    private static final String CLIENT_IDENTIFIER_PATTERN = "A.M.I.C.A / %s";
+    private static final String CLIENT_IDENTIFIER_PATTERN = "A.M.I.C.A. / %s";
 
     public HiveMqttMessageBus(String host, String identifier, PayloadSerializer payloadSerializer) {
         this.host = host;
@@ -88,6 +89,10 @@ public class HiveMqttMessageBus implements MessageBus {
         var client = getClient(response);
         var future = publishMessage(client, topic, response);
         future.thenAccept(publishResult -> client.disconnect());
+
+        if (Boolean.TRUE.equals(response.payload().isComplete())) {
+            send(Message.systemEvent(new ConversationEnded(response.conversationId().value())));
+        }
     }
 
     @Override

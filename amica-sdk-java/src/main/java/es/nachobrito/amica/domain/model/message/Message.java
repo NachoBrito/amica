@@ -51,6 +51,17 @@ public record Message<P extends MessagePayload>(
     }
 
     /**
+     * Creates a new message that is a system event.
+     *
+     * @param event the event payload
+     * @param <E>   the type of event payload
+     * @return the new event message
+     */
+    public static <E extends SystemEvent> Message<E> systemEvent(E event) {
+        return new Message<>(MessageId.newRandom(), ConversationId.newRandom(), MessageTopic.SYSTEM_EVENTS, event);
+    }
+
+    /**
      * Creates a new message that is an LLM response to a user message.
      *
      * @param original        the original user message

@@ -18,8 +18,8 @@ package es.nachobrito.amica.domain.model.agent;
 
 import es.nachobrito.amica.domain.model.message.Message;
 import es.nachobrito.amica.domain.model.message.MessageBus;
-import es.nachobrito.amica.domain.model.message.MessagePayload;
 import es.nachobrito.amica.domain.model.message.MessageTopic;
+import es.nachobrito.amica.domain.model.message.SystemEvent;
 import es.nachobrito.amica.domain.model.message.payload.UserRequest;
 
 import java.util.List;
@@ -33,9 +33,9 @@ public interface Agent {
 
     void onUserMessage(Message<UserRequest> userRequestMessage);
 
-    void onSystemMessage(Message<?> systemMessage);
+    void onSystemMessage(Message<? extends SystemEvent> systemMessage);
 
-    List<Class<? extends MessagePayload>> getAcceptedSystemMessages();
+    List<Class<? extends SystemEvent>> getAcceptedSystemMessages();
 
     default void register(MessageBus bus) {
         bus.registerConsumer(MessageTopic.USER_REQUESTS, UserRequest.class, this::onUserMessage);

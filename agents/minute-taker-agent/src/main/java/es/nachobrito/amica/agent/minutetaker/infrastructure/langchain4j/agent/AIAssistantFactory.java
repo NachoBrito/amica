@@ -18,59 +18,20 @@ package es.nachobrito.amica.agent.minutetaker.infrastructure.langchain4j.agent;
 
 import dev.langchain4j.model.jlama.JlamaStreamingChatModel;
 import dev.langchain4j.service.AiServices;
-import dev.langchain4j.service.tool.ToolProviderResult;
-import es.nachobrito.amica.domain.model.agent.AgentDetails;
-import es.nachobrito.amica.domain.model.agent.Memory;
-import es.nachobrito.amica.domain.model.agent.tool.ToolExecutor;
-import es.nachobrito.amica.domain.model.agent.tool.ToolManager;
-import es.nachobrito.amica.domain.model.message.ConversationId;
 
 /**
  * @author nacho
  */
 public class AIAssistantFactory {
-  public static final String CHAT_MODEL = "tjake/Qwen2.5-0.5B-Instruct-JQ4";
-  // public static final String CHAT_MODEL = "tjake/Llama-3.2-1B-Instruct-JQ4";
+  // public static final String CHAT_MODEL = "tjake/Qwen2.5-0.5B-Instruct-JQ4";
+  public static final String CHAT_MODEL = "tjake/Llama-3.2-1B-Instruct-JQ4";
   // public static final String CHAT_MODEL = "tjake/Mistral-7B-Instruct-v0.3-JQ4";
   public static final float TEMPERATURE = 0.0f;
 
-  /**
-   * Creates an AIAssistant instance with the provided resources
-   *
-   * @param memory the Memory implementation for minutetaker management
-   * @param toolManager the ToolManager implementation for tool access
-   * @param toolExecutor The ToolExecutor implementation for tool execution
-   * @param agentDetails the AgentDetails instance with information about the current Agent
-   * @return the new AIAssistant instance
-   */
-  static AIAssistant with(
-      Memory memory,
-      ToolManager toolManager,
-      ToolExecutor toolExecutor,
-      AgentDetails agentDetails) {
+  static AIAssistant create() {
     var chatModel =
         JlamaStreamingChatModel.builder().modelName(CHAT_MODEL).temperature(TEMPERATURE).build();
 
-    return AiServices.builder(AIAssistant.class)
-        .streamingChatModel(chatModel)
-        .chatMemoryProvider(
-            memoryId ->
-                ChatMemoryFactory.with(
-                    memory.getConversation(new ConversationId(memoryId.toString())), agentDetails))
-        .toolProvider(
-            toolProviderRequest -> {
-              var builder = ToolProviderResult.builder();
-              var userRequest = toolProviderRequest.userMessage().singleText();
-              toolManager
-                  .getRelevantTools(userRequest)
-                  .forEach(
-                      tool -> {
-                        var toolSpecification = ToolSpecificationFactory.with(tool);
-                        var executor = ToolExecutorFactory.with(tool, toolExecutor);
-                        builder.add(toolSpecification, executor);
-                      });
-              return builder.build();
-            })
-        .build();
+    return AiServices.builder(AIAssistant.class).streamingChatModel(chatModel).build();
   }
 }

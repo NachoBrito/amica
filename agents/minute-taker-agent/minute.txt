@@ -1,0 +1,5 @@
+The user asked,
+The agent response was,
+Today is cloudy in Madrid, temperature is 16CThe user asked,
+The agent response was,
+Today is cloudy in Madrid, temperature is 16C

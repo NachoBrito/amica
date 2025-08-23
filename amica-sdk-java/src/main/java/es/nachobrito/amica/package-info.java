@@ -24,7 +24,10 @@
                         relativeName = "SequenceNumber.json"),
                 @JsonSchemaFileLocation(
                         moduleAndPackage = "es.nachobrito.amica.domain.model.message.payload",
-                        relativeName = "AgentResponse.json")
+                        relativeName = "AgentResponse.json"),
+                @JsonSchemaFileLocation(
+                        moduleAndPackage = "es.nachobrito.amica.domain.model.message.payload",
+                        relativeName = "ConversationEnded.json")
         },
         schemaConfigurations = {
                 @JsonSchemaConfiguration(
@@ -37,7 +40,11 @@
                 @JsonSchemaConfiguration(
                         schemaId = "AgentResponse",
                         javaTypeQualifiedName = "es.nachobrito.amica.domain.model.message.payload.AgentResponse",
-                        javaInterfaceQualifiedNames = "es.nachobrito.amica.domain.model.message.MessagePayload")
+                        javaInterfaceQualifiedNames = "es.nachobrito.amica.domain.model.message.MessagePayload"),
+                @JsonSchemaConfiguration(
+                        schemaId = "ConversationEnded",
+                        javaTypeQualifiedName = "es.nachobrito.amica.domain.model.message.payload.ConversationEnded",
+                        javaInterfaceQualifiedNames = "es.nachobrito.amica.domain.model.message.SystemEvent")
         })
 package es.nachobrito.amica;
 

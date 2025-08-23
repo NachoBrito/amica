@@ -18,28 +18,21 @@ package es.nachobrito.amica.agent.minutetaker.infrastructure.langchain4j.agent;
 
 import static es.nachobrito.amica.agent.minutetaker.infrastructure.langchain4j.agent.AIAssistantFactory.CHAT_MODEL;
 
-import dev.langchain4j.model.chat.response.ChatResponse;
-import dev.langchain4j.model.chat.response.PartialThinking;
-import dev.langchain4j.model.input.PromptTemplate;
-import dev.langchain4j.rag.content.Content;
-import dev.langchain4j.service.TokenStream;
-import dev.langchain4j.service.tool.ToolExecution;
 import es.nachobrito.amica.domain.model.agent.Agent;
 import es.nachobrito.amica.domain.model.agent.AgentDetails;
 import es.nachobrito.amica.domain.model.agent.Memory;
-import es.nachobrito.amica.domain.model.agent.tool.ToolExecutor;
-import es.nachobrito.amica.domain.model.agent.tool.ToolManager;
-import es.nachobrito.amica.domain.model.message.AgentExecutionException;
-import es.nachobrito.amica.domain.model.message.Message;
-import es.nachobrito.amica.domain.model.message.MessageBus;
-import es.nachobrito.amica.domain.model.message.MessagePayload;
-import es.nachobrito.amica.domain.model.message.payload.AgentResponse;
-import es.nachobrito.amica.domain.model.message.payload.SequenceNumber;
+import es.nachobrito.amica.domain.model.agent.conversation.Conversation;
+import es.nachobrito.amica.domain.model.agent.conversation.ConversationMessage;
+import es.nachobrito.amica.domain.model.agent.conversation.ConversationMessageType;
+import es.nachobrito.amica.domain.model.message.*;
+import es.nachobrito.amica.domain.model.message.payload.ConversationEnded;
 import es.nachobrito.amica.domain.model.message.payload.UserRequest;
 import jakarta.inject.Singleton;
-import java.time.ZonedDateTime;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,25 +46,18 @@ public class MinuteTakerAgent implements Agent {
       new AgentDetails(
           "minutetaker-agent", "Conversation Agent (Langchain4J/JLama/%s)".formatted(CHAT_MODEL));
 
-  private final MessageBus messageBus;
-  private final ToolManager toolManager;
-  private final ToolExecutor toolExecutor;
   private final Memory memory;
 
   private AIAssistant assistant;
-  private PromptTemplate systemPromptTemplate;
 
-  public MinuteTakerAgent(
-      MessageBus messageBus, ToolManager toolManager, ToolExecutor toolExecutor, Memory memory) {
-    this.messageBus = messageBus;
-    this.toolManager = toolManager;
+  public MinuteTakerAgent( Memory memory) {
+
     this.memory = memory;
-    this.toolExecutor = toolExecutor;
   }
 
   private AIAssistant getAssistant() {
     if (assistant == null) {
-      assistant = AIAssistantFactory.with(memory, toolManager, toolExecutor, agentDetails);
+      assistant = AIAssistantFactory.create();
     }
     return assistant;
   }
@@ -83,72 +69,72 @@ public class MinuteTakerAgent implements Agent {
 
   @Override
   public void onUserMessage(Message<UserRequest> userMessage) {
-    var payload = userMessage.payload();
+    // This agent does not respond to user requests.
+  }
 
-    TokenStream tokenStream =
-        getAssistant()
-            .chat(userMessage.conversationId().value(), payload.userName(), payload.message());
+  @Override
+  public void onSystemMessage(Message<? extends SystemEvent> message) {
+    if (message.payload() instanceof ConversationEnded conversationEnded) {
+      onConversationEnded(conversationEnded);
+    }
+  }
 
-    var sequence = new AtomicInteger();
+  private void onConversationEnded(ConversationEnded conversationEnded) {
+    var conversation =
+        memory.getConversation(new ConversationId(conversationEnded.conversationId()));
+    if (conversation.getMessages().isEmpty()) {
+      logger.error(
+          "Conversation {} does not contain any message. No summary to generate!",
+          conversationEnded.conversationId());
+      return;
+    }
 
-    tokenStream
-        .onPartialResponse(this::onPartialResponse)
-        .onPartialThinking(this::onPartialThinking)
-        .onRetrieved(this::onContentRetrieved)
-        .onIntermediateResponse(this::onIntermediateResponse)
-        .onToolExecuted(this::onToolExecuted)
-        .onCompleteResponse(
-            (ChatResponse response) ->
-                publishCompleteResponse(userMessage, response, sequence.getAndIncrement()))
-        .onError((Throwable error) -> onError(userMessage, error))
+    var text =
+        conversation.getMessages().stream()
+            .filter(this::isAgentOrUser)
+            .map(this::buildStringView)
+            .collect(Collectors.joining("\n"));
+    getAssistant()
+        .chat(text)
+        .onCompleteResponse(response -> saveMinute(response.aiMessage().text(), conversation))
+        .onPartialResponse(logger::debug)
+        .onError(it -> logger.error(it.getMessage(), it))
         .start();
   }
 
-  private void onError(Message<UserRequest> userMessage, Throwable error) {
-    logger.error(error.getMessage(), error);
-    throw new AgentExecutionException(userMessage, error);
+  private void saveMinute(String minute, Conversation conversation) {
+    var summaryFile = createSummaryFilePath(conversation);
+    try {
+      Files.writeString(summaryFile, minute);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
-  private void publishCompleteResponse(
-      Message<UserRequest> userMessage, ChatResponse response, int sequenceNumber) {
-    messageBus.respond(
-        userMessage.id(),
-        Message.responseTo(
-            userMessage,
-            new AgentResponse(
-                response.aiMessage().text(),
-                ZonedDateTime.now(),
-                true,
-                new SequenceNumber(sequenceNumber))));
+  private Path createSummaryFilePath(Conversation conversation) {
+    var dataFolder = Path.of("./data");
+    if (!dataFolder.toFile().isDirectory()) {
+      try {
+        Files.createDirectories(dataFolder);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    var fileName = "%s.minute.json".formatted(conversation.getId().value());
+    return Path.of(dataFolder.toAbsolutePath().toString(), fileName).toAbsolutePath();
   }
 
-  private void onToolExecuted(ToolExecution toolExecution) {
-    logger.debug("Tool executed: {}", toolExecution);
+  private String buildStringView(ConversationMessage message) {
+    return "%s: %s".formatted(message.source(), message.text());
   }
 
-  private void onIntermediateResponse(ChatResponse chatResponse) {
-    logger.debug("Intermediate response: {}", chatResponse.aiMessage().text());
-  }
-
-  private void onContentRetrieved(List<Content> contents) {
-    logger.debug("Content retrieved: {}", contents);
-  }
-
-  private void onPartialThinking(PartialThinking partialThinking) {
-    logger.debug("Partial thinking: {}", partialThinking.text());
-  }
-
-  private void onPartialResponse(String partialResponse) {
-    logger.debug("Partial: {}", partialResponse);
+  private boolean isAgentOrUser(ConversationMessage conversationMessage) {
+    return conversationMessage.messageType().equals(ConversationMessageType.USER_MESSAGE)
+        || conversationMessage.messageType().equals(ConversationMessageType.AGENT_MESSAGE);
   }
 
   @Override
-  public void onSystemMessage(Message<?> message) {
-    // TODO
-  }
-
-  @Override
-  public List<Class<? extends MessagePayload>> getAcceptedSystemMessages() {
-    return List.of();
+  public List<Class<? extends SystemEvent>> getAcceptedSystemMessages() {
+    return List.of(ConversationEnded.class);
   }
 }

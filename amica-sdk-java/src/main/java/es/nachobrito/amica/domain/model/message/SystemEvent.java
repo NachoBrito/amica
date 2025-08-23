@@ -14,17 +14,10 @@
  *    limitations under the License.
  */
 
-package es.nachobrito.amica.agent.minutetaker.domain.model.agent.tool;
+package es.nachobrito.amica.domain.model.message;
 
 /**
  * @author nacho
  */
-public class ToolInvocationException extends RuntimeException {
-  public ToolInvocationException(String message) {
-    super(message);
-  }
-
-  public ToolInvocationException(Throwable e) {
-    super(e);
-  }
+public interface SystemEvent extends MessagePayload {
 }

@@ -1,0 +1,15 @@
+{
+  "$id": "ConversationEnded",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ConversationEnded",
+  "type": "object",
+  "required": [
+    "conversationId"
+  ],
+  "properties": {
+    "conversationId": {
+      "type": "string"
+    }
+  }
+}
+

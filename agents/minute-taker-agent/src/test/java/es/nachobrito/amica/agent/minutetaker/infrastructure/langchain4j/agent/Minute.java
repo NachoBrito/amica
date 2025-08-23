@@ -14,9 +14,9 @@
  *    limitations under the License.
  */
 
-package es.nachobrito.amica.agent.minutetaker.domain.model.agent.tool;
+package es.nachobrito.amica.agent.minutetaker.infrastructure.langchain4j.agent;
 
 /**
  * @author nacho
  */
-public record WriteToFileToolParams(String filePath, String text) {}
+public record Minute(String[] actors, String[] messages, String summary) {}
