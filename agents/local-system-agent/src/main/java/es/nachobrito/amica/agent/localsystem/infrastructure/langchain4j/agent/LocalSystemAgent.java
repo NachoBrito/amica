@@ -32,7 +32,7 @@ import es.nachobrito.amica.domain.model.agent.tool.ToolManager;
 import es.nachobrito.amica.domain.model.message.AgentExecutionException;
 import es.nachobrito.amica.domain.model.message.Message;
 import es.nachobrito.amica.domain.model.message.MessageBus;
-import es.nachobrito.amica.domain.model.message.MessagePayload;
+import es.nachobrito.amica.domain.model.message.SystemEvent;
 import es.nachobrito.amica.domain.model.message.payload.AgentResponse;
 import es.nachobrito.amica.domain.model.message.payload.SequenceNumber;
 import es.nachobrito.amica.domain.model.message.payload.UserRequest;
@@ -143,12 +143,12 @@ public class LocalSystemAgent implements Agent {
   }
 
   @Override
-  public void onSystemMessage(Message<?> message) {
-    // TODO
+  public void onSystemMessage(Message<? extends SystemEvent> message) {
+    // This agent does not listen for system events.
   }
 
   @Override
-  public List<Class<? extends MessagePayload>> getAcceptedSystemMessages() {
+  public List<Class<? extends SystemEvent>> getAcceptedSystemMessages() {
     return List.of();
   }
 }
