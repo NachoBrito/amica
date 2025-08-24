@@ -91,6 +91,7 @@ public class HiveMqttMessageBus implements MessageBus {
         future.thenAccept(publishResult -> client.disconnect());
 
         if (Boolean.TRUE.equals(response.payload().isComplete())) {
+            logger.info("Conversation {} closed. Publishing ConversationEnded system event.", response.conversationId().value());
             send(Message.systemEvent(new ConversationEnded(response.conversationId().value())));
         }
     }
@@ -156,11 +157,15 @@ public class HiveMqttMessageBus implements MessageBus {
         }
         topicHandlers.computeIfAbsent(messageTopic, k -> ConcurrentHashMap.newKeySet());
         var topic = toMqttTopic(messageTopic);
-        getSubscriptionClient().subscribeWith()
+        getSubscriptionClient()
+                .subscribeWith()
                 .topicFilter(topic)
                 .qos(MqttQos.AT_LEAST_ONCE)
                 .callback(this::handleMessage)
-                .send();
+                .send()
+                .thenAccept(ack -> {
+                    logger.info("Subscribed to topic {}: {}", messageTopic.name(), ack.toString());
+                });
         return topicHandlers.get(messageTopic);
     }
 

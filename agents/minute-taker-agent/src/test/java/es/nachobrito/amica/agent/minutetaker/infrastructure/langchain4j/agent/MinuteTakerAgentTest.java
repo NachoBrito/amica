@@ -60,7 +60,7 @@ class MinuteTakerAgentTest {
         List.of(
             ConversationMessage.ofUserMessage("Nacho", "What is the weather like in Madrid today?"),
             ConversationMessage.ofAgentResponse(
-                new AgentDetails("weather-agent", "Weather Agent"),
+                new AgentDetails("weather-agent", "Weather Agent", true, true),
                 "Today is cloudy in Madrid, temperature is 16C",
                 null,
                 Set.of()));

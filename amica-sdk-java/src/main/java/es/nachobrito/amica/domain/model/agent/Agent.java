@@ -38,9 +38,14 @@ public interface Agent {
     List<Class<? extends SystemEvent>> getAcceptedSystemMessages();
 
     default void register(MessageBus bus) {
-        bus.registerConsumer(MessageTopic.USER_REQUESTS, UserRequest.class, this::onUserMessage);
-        getAcceptedSystemMessages()
-                .forEach(type ->
-                        bus.registerConsumer(MessageTopic.SYSTEM_EVENTS, type, this::onSystemMessage));
+        var agentDetails = getDetails();
+        if (agentDetails.listenUserRequests()) {
+            bus.registerConsumer(MessageTopic.USER_REQUESTS, UserRequest.class, this::onUserMessage);
+        }
+        if (agentDetails.listenSystemEvents()) {
+            getAcceptedSystemMessages()
+                    .forEach(type ->
+                            bus.registerConsumer(MessageTopic.SYSTEM_EVENTS, type, this::onSystemMessage));
+        }
     }
 }

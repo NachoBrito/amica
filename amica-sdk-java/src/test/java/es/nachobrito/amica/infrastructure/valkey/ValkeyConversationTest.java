@@ -59,7 +59,7 @@ class ValkeyConversationTest {
         var messages = List.of(
                 ConversationMessage.ofUserMessage("User Name", "user message"),
                 ConversationMessage.ofToolExecution(new ConversationMessage.ToolExecutionRequest("id", "tool name", "arguments"), "tool result"),
-                ConversationMessage.ofAgentResponse(new AgentDetails("agent-id", "Test Agent"), "agent response", "thinking", Set.of())
+                ConversationMessage.ofAgentResponse(new AgentDetails("agent-id", "Test Agent", true, true), "agent response", "thinking", Set.of())
         );
         var serialized = messages.stream().map(messageSerializer::serializeMessage).toList();
         doReturn(serialized).when(jedis).lrange(eq(conversationKey), eq(0L), eq(-1L));

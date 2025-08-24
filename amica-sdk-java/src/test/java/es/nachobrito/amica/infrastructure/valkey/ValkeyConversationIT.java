@@ -42,7 +42,7 @@ public class ValkeyConversationIT {
         var messages = List.of(
                 ConversationMessage.ofUserMessage("User Name", "user message"),
                 ConversationMessage.ofToolExecution(new ConversationMessage.ToolExecutionRequest("id", "tool name", "arguments"), "result"),
-                ConversationMessage.ofAgentResponse(new AgentDetails("agent-id", "Test Agent"), "agent response", "agent thinking", Set.of())
+                ConversationMessage.ofAgentResponse(new AgentDetails("agent-id", "Test Agent", true, true), "agent response", "agent thinking", Set.of())
         );
         messages.forEach(conversation::add);
 

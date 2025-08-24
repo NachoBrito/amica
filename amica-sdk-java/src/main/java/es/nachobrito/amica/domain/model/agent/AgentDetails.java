@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 /**
  * @author nacho
  */
-public record AgentDetails(String agentId, String agentName) {
+public record AgentDetails(String agentId, String agentName, boolean listenUserRequests, boolean listenSystemEvents) {
     private static final Pattern idPattern = Pattern.compile("^[a-z0-9\\-]{5,}$");
 
     public AgentDetails {

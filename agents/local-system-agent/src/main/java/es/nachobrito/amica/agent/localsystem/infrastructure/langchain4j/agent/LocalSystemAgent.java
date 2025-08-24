@@ -51,7 +51,10 @@ public class LocalSystemAgent implements Agent {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   private final AgentDetails agentDetails =
       new AgentDetails(
-          "localsystem-agent", "Conversation Agent (Langchain4J/JLama/%s)".formatted(CHAT_MODEL));
+          "local-system-agent",
+          "Conversation Agent (Langchain4J/JLama/%s)".formatted(CHAT_MODEL),
+          true,
+          false);
 
   private final MessageBus messageBus;
   private final ToolManager toolManager;

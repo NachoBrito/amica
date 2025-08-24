@@ -35,7 +35,6 @@
         <micronaut.version>4.9.0</micronaut.version>
         <exec.mainClass>es.nachobrito.amica.cli.CliCommand</exec.mainClass>
         <json-schema-to-java-record.version>1.0</json-schema-to-java-record.version>
-
     </properties>
 
     <repositories>

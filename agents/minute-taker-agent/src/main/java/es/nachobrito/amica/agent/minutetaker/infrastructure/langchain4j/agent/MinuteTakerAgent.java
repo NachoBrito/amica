@@ -41,16 +41,20 @@ import org.slf4j.LoggerFactory;
  */
 @Singleton
 public class MinuteTakerAgent implements Agent {
+  private static final String AGENT_PROMPT_CTA = "Respond to the following user message:";
   private final Logger logger = LoggerFactory.getLogger(getClass());
   private final AgentDetails agentDetails =
       new AgentDetails(
-          "minutetaker-agent", "Conversation Agent (Langchain4J/JLama/%s)".formatted(CHAT_MODEL));
+          "minutetaker-agent",
+          "Conversation Agent (Langchain4J/JLama/%s)".formatted(CHAT_MODEL),
+          false,
+          true);
 
   private final Memory memory;
 
   private AIAssistant assistant;
 
-  public MinuteTakerAgent( Memory memory) {
+  public MinuteTakerAgent(Memory memory) {
 
     this.memory = memory;
   }
@@ -91,7 +95,7 @@ public class MinuteTakerAgent implements Agent {
 
     var text =
         conversation.getMessages().stream()
-            .filter(this::isAgentOrUser)
+            .filter(this::includeMessageInMinute)
             .map(this::buildStringView)
             .collect(Collectors.joining("\n"));
     getAssistant()
@@ -104,6 +108,9 @@ public class MinuteTakerAgent implements Agent {
 
   private void saveMinute(String minute, Conversation conversation) {
     var summaryFile = createSummaryFilePath(conversation);
+    logger.info(
+        "Saving minute for conversation {} to {}", conversation.getId().value(), summaryFile);
+    logger.info("\n{}\n", minute);
     try {
       Files.writeString(summaryFile, minute);
     } catch (IOException e) {
@@ -125,12 +132,22 @@ public class MinuteTakerAgent implements Agent {
   }
 
   private String buildStringView(ConversationMessage message) {
-    return "%s: %s".formatted(message.source(), message.text());
+    var text = message.text();
+    if (text.contains(AGENT_PROMPT_CTA)) {
+      // Remove prompt details, use only the system query
+      var pos = text.indexOf(AGENT_PROMPT_CTA) + AGENT_PROMPT_CTA.length();
+      text = text.substring(pos).trim();
+    }
+
+    return "%s: %s".formatted(message.source(), text);
   }
 
-  private boolean isAgentOrUser(ConversationMessage conversationMessage) {
-    return conversationMessage.messageType().equals(ConversationMessageType.USER_MESSAGE)
-        || conversationMessage.messageType().equals(ConversationMessageType.AGENT_MESSAGE);
+  private boolean includeMessageInMinute(ConversationMessage conversationMessage) {
+    var isUserOrAgent =
+        conversationMessage.messageType().equals(ConversationMessageType.USER_MESSAGE)
+            || conversationMessage.messageType().equals(ConversationMessageType.AGENT_MESSAGE);
+    var hasMessage = conversationMessage.text() != null && !conversationMessage.text().isEmpty();
+    return isUserOrAgent && hasMessage;
   }
 
   @Override

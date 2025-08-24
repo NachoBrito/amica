@@ -18,6 +18,7 @@ package es.nachobrito.amica.agent.localsystem;
 
 import es.nachobrito.amica.domain.model.agent.conversation.ConversationMessage;
 import es.nachobrito.amica.domain.model.message.payload.AgentResponse;
+import es.nachobrito.amica.domain.model.message.payload.ConversationEnded;
 import es.nachobrito.amica.domain.model.message.payload.SequenceNumber;
 import es.nachobrito.amica.domain.model.message.payload.UserRequest;
 import io.micronaut.runtime.Micronaut;
@@ -28,6 +29,7 @@ import io.micronaut.serde.annotation.SerdeImport;
 @SerdeImport(SequenceNumber.class)
 @SerdeImport(ConversationMessage.class)
 @SerdeImport(ConversationMessage.ToolExecutionRequest.class)
+@SerdeImport(ConversationEnded.class)
 public class Application {
 
   public static void main(String[] args) {
