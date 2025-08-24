@@ -26,9 +26,6 @@ import java.util.Arrays;
 /// - Publish [Message] instances
 /// - Maintain conversations, where several [Message] instances are published in response to a first one.
 ///
-/// Do not confuse value with response messages. value is a way to keep multiple messages (and their
-/// responses) linked in a same context. MessageBus implementations should verify that responses to a message contain
-/// the same value that the original one.
 public interface MessageBus {
     /**
      * Publishes a message to the bus.

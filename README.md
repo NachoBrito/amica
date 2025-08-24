@@ -1,7 +1,9 @@
 
 # A.M.I.C.A.
 
-**A.M.I.C.A.** stands for "Autonomous Multi-agent Intelligent Companion Assistant", and "**amica**" is the latin word for *friend*
+**A.M.I.C.A.** stands for "Autonomous Multi-agent Intelligent Companion Assistant", and "**amica**" is the latin word for *friend*.
+
+This project is a *proof of concept* for a system in which several agents cooperate asynchronously to perform different tasks. This is the companion code for the article ["A.M.I.C.A."](https://nachobrito.es/sideprojects/project-amica) where you can find all the details about this project.
 
 ## How to run this project
 
