@@ -16,8 +16,8 @@
 
 package es.nachobrito.amica.domain.model.agent.tool;
 
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Implementations of this interface will encapsulate relevant tool identification.
@@ -25,7 +25,7 @@ import java.util.Set;
  * @author nacho
  */
 public interface ToolManager {
-    Set<Tool<?, ?>> getRelevantTools(String userQuery);
+    List<? extends Tool<?, ?>> getRelevantTools(String userQuery);
 
-    Optional<Tool<?, ?>> getTool(String name);
+    Optional<? extends Tool<?, ?>> getTool(String name);
 }

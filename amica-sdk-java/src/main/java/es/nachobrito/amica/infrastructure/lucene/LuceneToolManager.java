@@ -25,6 +25,7 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.Query;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -69,7 +70,7 @@ public class LuceneToolManager implements ToolManager {
     }
 
     @Override
-    public Set<Tool<?, ?>> getRelevantTools(String userQuery) {
+    public List<? extends Tool<?, ?>> getRelevantTools(String userQuery) {
         try {
             //We consider relevant any tool with a description containing any of the words in the query
             //Note that using Lucene's English analyzer will remove stop-words, and tokenize the others.
@@ -80,7 +81,7 @@ public class LuceneToolManager implements ToolManager {
                     .stream()
                     .filter(it -> it.matches(query))
                     .map(IndexedTool::tool)
-                    .collect(Collectors.toSet());
+                    .toList();
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }

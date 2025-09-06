@@ -16,9 +16,9 @@
 
 package es.nachobrito.amica.domain.model.agent.tool;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -31,13 +31,13 @@ public class DefaultToolManager implements ToolManager {
 
     private final Map<String, Tool<?, ?>> tools;
 
-    public DefaultToolManager(Set<Tool<?, ?>> tools) {
+    public DefaultToolManager(List<Tool<?, ?>> tools) {
         this.tools = tools.stream().collect(Collectors.toMap(Tool::getName, Function.identity()));
     }
 
     @Override
-    public Set<Tool<?, ?>> getRelevantTools(String userQuery) {
-        return Set.copyOf(tools.values());
+    public List<Tool<?, ?>> getRelevantTools(String userQuery) {
+        return List.copyOf(tools.values());
     }
 
     @Override
